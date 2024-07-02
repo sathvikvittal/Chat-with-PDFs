@@ -1,0 +1,12 @@
+langchain
+chromadb
+pypdf
+groq
+langchain_core
+python-dotenv
+langchain_community
+langchain-groq
+beautifulsoup4
+streamlit
+google-generativeai
+python-dotenv
