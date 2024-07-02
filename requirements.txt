@@ -10,3 +10,5 @@ beautifulsoup4
 streamlit
 google-generativeai
 python-dotenv
+faiss-cpu
+langchain-huggingface
