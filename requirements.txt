@@ -8,3 +8,4 @@ streamlit
 python-dotenv
 langchain-huggingface
 langchainhub
+langchain_google_genai
