@@ -1,20 +1,24 @@
 from dotenv import load_dotenv
 import os
 import streamlit as st
-import google.generativeai as genai
 from PyPDF2 import PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import GooglePalmEmbeddings
 from langchain.vectorstores import Chroma
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
-from langchain.embeddings import HuggingFaceInstructEmbeddings
-from langchain_community.llms.ollama import Ollama
+from langchain.llms import GooglePalm
 from template import ai_chat, human_chat, css
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain import hub
+
+# from langchain.memory import ConversationBufferMemory
+# from langchain.chains import ConversationalRetrievalChain
 
 
 # genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 
 def pdfread(docs):
@@ -28,34 +32,42 @@ def pdfread(docs):
 
 
 def get_chunks(text):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, chunk_overlap=250, length_function=len,
+    splitter = CharacterTextSplitter(
+        chunk_size=1000, chunk_overlap=250, length_function=len,separator="\n"
     )
     chunks = splitter.split_text(text)
     return chunks
 
 
 def get_vectordb(chunks):
-    embed = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
+    embed = GooglePalmEmbeddings()
     vectordb = Chroma.from_texts(texts=chunks,embedding=embed)
     return vectordb
     
 
 def get_chain(vectordb):
-    model = Ollama()
-    mem = ConversationBufferMemory(memory_key="history",return_messages=True)
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=model,
-        memory=mem,
-        retriever=vectordb.as_retriever(),
+    model = GooglePalm()
+    # mem = ConversationBufferMemory(memory_key="chat_history",return_messages=True)
+    # chain = ConversationalRetrievalChain.from_llm(
+    #     llm=model,
+    #     memory=mem,
+    #     retriever=vectordb.as_retriever(),
+    # )
+    prompt = hub.pull("rlm/rag-prompt")
+
+    chain = (
+    {"context": vectordb.as_retriever() | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | model
+    | StrOutputParser()
     )
     return chain
 
 
 def get_response(inp):
-    response = st.session_state.chain({"question":inp})
-    st.write(response)
-
+    response = st.session_state.chain.invoke(inp)
+    st.write(human_chat.replace("{{MSG}}",inp),unsafe_allow_html=True)
+    st.write(ai_chat.replace("{{MSG}}",response),unsafe_allow_html=True)
 
 def main():
     load_dotenv()
@@ -71,11 +83,10 @@ def main():
     if inp:
         get_response(inp)
 
-    if st.button("Ask"):
-        st.write(get_response(inp))
+    # if st.button("Ask"):
+    #     st.write(get_response(inp))
 
-    st.write(human_chat.replace("{{MSG}}","Hey"),unsafe_allow_html=True)
-    st.write(ai_chat.replace("{{MSG}}","Hey"),unsafe_allow_html=True)
+    
 
 
     with st.sidebar:
@@ -84,7 +95,7 @@ def main():
         if st.button("Upload"):
             with st.spinner("Loading"):
                 text = pdfread(docs)
-                # st.write(data)
+                # st.write(text)
                 chunks = get_chunks(text)
                 # st.write(chunks)
                 vectordb = get_vectordb(chunks)
