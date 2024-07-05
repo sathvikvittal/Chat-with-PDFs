@@ -58,7 +58,7 @@ def get_vectordb(chunks):
     
 
 def get_chain(vectordb):
-    model = GoogleGenerativeAI(model="gemini-pro")
+    model = GoogleGenerativeAI(model="models/text-bison-002")
     # mem = ConversationBufferMemory(memory_key="chat_history",return_messages=True)
     # chain = ConversationalRetrievalChain.from_llm(
     #     llm=model,
