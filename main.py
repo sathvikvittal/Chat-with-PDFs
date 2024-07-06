@@ -24,6 +24,8 @@ from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddin
 # Use the following pieces of retrieved context to answer the question.
 # If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
 # '''
+
+
 load_dotenv()
 my_api = os.getenv("GOOGLE_API_KEY")
 
@@ -58,7 +60,7 @@ def get_vectordb(chunks):
     
 
 def get_chain(vectordb):
-    model = GoogleGenerativeAI(model="models/text-bison-002")
+    model = GoogleGenerativeAI(model="models/text-bison-001")
     # mem = ConversationBufferMemory(memory_key="chat_history",return_messages=True)
     # chain = ConversationalRetrievalChain.from_llm(
     #     llm=model,
@@ -80,6 +82,7 @@ def get_response(inp):
     response = st.session_state.chain.invoke(inp)
     st.write(human_chat.replace("{{MSG}}",inp),unsafe_allow_html=True)
     st.write(ai_chat.replace("{{MSG}}",response),unsafe_allow_html=True)
+
 
 def main():
     
