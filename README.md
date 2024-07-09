@@ -14,7 +14,7 @@ Developed an innovative app that leverages LangChain, Google's open-source model
 
 2. Install dependencies:
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
  ```
 
 3. Add your own [Google](https://ai.google.dev/) or [Hugging Face](https://huggingface.co/) API key to the .env file.
